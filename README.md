@@ -1,7 +1,7 @@
 Arduino+ENC28J60 for narodmon.ru
 =========================
 
-Send meteodata from Arduino with ENC28J60 module to narodmon.ru
+Send meteodata from Arduino with ENC28J60 module to http://narodmon.ru
 By Vitaly Korobov
 
 Based on:
