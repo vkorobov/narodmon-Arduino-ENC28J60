@@ -1,5 +1,5 @@
  /*
-Скетч для Arduino/ENC28J60 для отправки метеоданных на Народный мониторинг 
+Скетч для Arduino/ENC28J60 для отправки метеоданных на Народный мониторинг
 Автор: Виталий Коробов
 Версия: 0.1 (2014.10.06)
 
@@ -17,7 +17,7 @@ http://student-proger.ru/2014/07/meteostanciya-2-0/
 #include <Adafruit_BMP085.h>
 #include <BH1750.h>
 #include <EtherCard.h> // https://github.com/jcw/ethercard
-#include <avr/wdt.h> // Watchdog timer 
+#include <avr/wdt.h> // Watchdog timer
 
 bool Debug = true; //режим отладки
 
@@ -25,7 +25,7 @@ bool Debug = true; //режим отладки
 byte mac[] = { 0x,0x,0x,0x,0x,0x }; //MAC-адрес Arduino
 #define BMP085_EXIST 1          // наличие датчика атмосферного давления
 #define DHT_EXIST 1             // наличие датчика влажности
-#define DHT2_EXIST 1            // наличие второго датчика влажности
+#define DHT2_EXIST 0            // наличие второго датчика влажности
 #define LIGHTMETER_EXIST 0      // наличие датчика освещённости
 #define DS18B20_PIN 2           // пин подключения термодатчика DS18B20
 #define DHTPIN 6                // пин подключения датчика влажности DHT22
@@ -70,7 +70,7 @@ int CountSensors;                               // количество найд
 
 void setup(void) {
   wdt_disable();
-  
+
   Serial.begin(9600);
 
  //Узнаём количество термодатчиков
@@ -79,9 +79,9 @@ void setup(void) {
   {
     Serial.print("Found ");
     Serial.print(CountSensors);
-    Serial.println(" sensors."); 
+    Serial.println(" sensors.");
   }
-  
+
   #if BMP085_EXIST == 1
   if (!bmp.begin()) {
 	   Serial.println("Could not find a valid BMP085 sensor, check wiring!");
@@ -127,14 +127,14 @@ void loop(void) {
   //if correct answer is not received then re-initialize ethernet module
 
   if (res > 220){
-    initialize_ethernet(); 
+    initialize_ethernet();
   }
-  
+
   res = res + 1;
   wdt_reset();
 
   ether.packetLoop(ether.packetReceive());
-  
+
   //200 res = 10 seconds (50ms each res)
   if (res == 200) {
 
@@ -158,7 +158,7 @@ void loop(void) {
     stash.size(), sd);
 
     // send the packet - this also releases all stash buffers once done
-    session = ether.tcpSend(); 
+    session = ether.tcpSend();
     Serial.println("Send...");
   }
    const char* reply = ether.tcpReply(session);
@@ -168,7 +168,7 @@ void loop(void) {
      Serial.print(" - ");
      Serial.println(reply);
   }
-   
+
    if (reply != 0) {
      res = 0;
      Serial.println(reply);
@@ -176,24 +176,24 @@ void loop(void) {
     Serial.println("Ready...");
    }
 
-delay(500);
+delay(1500); //  5 minuts
 
 }
 
-void initialize_ethernet(void){  
-  for(;;){ // keep trying until you succeed 
+void initialize_ethernet(void){
+  for(;;){ // keep trying until you succeed
     //Reinitialize ethernet module
     if (Debug)
-    { 
+    {
       Serial.println("Reseting Ethernet...");
     }
     digitalWrite(5, LOW);
 
-    if (ether.begin(sizeof Ethernet::buffer, mac,10) == 0){ 
+    if (ether.begin(sizeof Ethernet::buffer, mac,10) == 0){
       Serial.println( "Failed to access Ethernet controller");
       continue;
     }
-    Serial.println("DHCP...");    
+    Serial.println("DHCP...");
     if (!ether.dhcpSetup()){
       Serial.println("DHCP failed");
       continue;
@@ -202,12 +202,12 @@ void initialize_ethernet(void){
     if (Debug)
     {
       ether.printIp("IP:  ", ether.myip);
-      ether.printIp("GW:  ", ether.gwip);  
-      ether.printIp("DNS: ", ether.dnsip);  
+      ether.printIp("GW:  ", ether.gwip);
+      ether.printIp("DNS: ", ether.dnsip);
     }
 
     Serial.println("DNS...");
-    
+
     if (!ether.dnsLookup(website)) {
       Serial.println("DNS failed");
       continue;
@@ -258,7 +258,7 @@ void meteodata()
     byte addr[8];
     float celsius;
     char temp[17];
-  
+
 
   //формирование HTTP-запроса
     memset(replyBuffer, 0, sizeof(replyBuffer));
@@ -266,7 +266,7 @@ void meteodata()
 
     strcat(replyBuffer, macbuf);
     // replyBuffer += macbuf;
-        
+
     ds.reset_search();
     //Теперь в цикле опрашиваем все датчики сразу
 
@@ -278,7 +278,7 @@ void meteodata()
       byte data[12];
       byte addr[8];
 
-      if ( !ds.search(addr)) 
+      if ( !ds.search(addr))
       {
         ds.reset_search();
 //        return;
@@ -291,7 +291,7 @@ void meteodata()
       delay(1000);
 
       present = ds.reset();
-      ds.select(addr);    
+      ds.select(addr);
       ds.write(0xBE);
 
       for ( i = 0; i < 9; i++) // we need 9 bytes
@@ -315,7 +315,7 @@ void meteodata()
 
 
       char temp[17];
- 
+
       //конвертируем адрес термодатчика
       for (int k=0; k<8; k++)
       {
@@ -343,7 +343,7 @@ void meteodata()
         strcat(replyBuffer,"-");
 
       }
-      
+
 
     memset(temp, 0, sizeof(temp));
 
@@ -364,9 +364,9 @@ void meteodata()
     }
 
     memset(temp, 0, sizeof(temp));
- 
+
     long p_100;
-    
+
     #if LIGHTMETER_EXIST == 1
       // get Lux Temperature
       strcat(replyBuffer, "&");
@@ -374,6 +374,7 @@ void meteodata()
       strcat(replyBuffer, "23=");
       int lux=lightMeter.readLightLevel();
       itoa(lux, temp);
+      strcat(replyBuffer, temp);
     if (Debug)
     {
         Serial.print("Light: ");
@@ -416,9 +417,9 @@ void meteodata()
         Serial.print("Temperature: ");
         Serial.println(Temperature);
       }
- 
+
     #endif
-    
+
     #if DHT_EXIST == 1
       DHT.read22(DHTPIN);
       Humidity = DHT.humidity;
@@ -429,7 +430,7 @@ void meteodata()
       strcat(replyBuffer, macbuf);
       strcat(replyBuffer, "011=");
       ftoc(Humidity*100);
-      
+
       // get DHT22 Temperature
       strcat(replyBuffer, "&");
       strcat(replyBuffer, macbuf);
@@ -454,7 +455,7 @@ void meteodata()
       strcat(replyBuffer, macbuf);
       strcat(replyBuffer, "021=");
       ftoc(Humidity*100);
-      
+
       // get DHT22 Temperature
       strcat(replyBuffer, "&");
       strcat(replyBuffer, macbuf);
@@ -501,8 +502,8 @@ void reverse(char s[])
 {
   int i, j;
   char c;
-  
-  for (i = 0, j = strlen(s)-1; i<j; i++, j--) 
+
+  for (i = 0, j = strlen(s)-1; i<j; i++, j--)
   {
     c = s[i];
     s[i] = s[j];
@@ -513,7 +514,7 @@ void reverse(char s[])
 void itoa(int n, char s[])
 {
   int i, sign;
-  
+
   if ((sign = n) < 0)       /* записываем знак */
     n = -n;                 /* делаем n положительным числом */
   i = 0;
@@ -528,7 +529,7 @@ void itoa(int n, char s[])
 
 int len(char *buf)
 {
-  int i=0; 
+  int i=0;
   do
   {
     i++;
