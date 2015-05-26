@@ -1,7 +1,7 @@
  /*
 Скетч для Arduino/ENC28J60 для отправки метеоданных на Народный мониторинг
 Автор: Виталий Коробов
-Версия: 0.1 (2014.10.06)
+Версия: 0.2 (2014.10.06)
 
 Основано на:
 Версия 2.0 (19.07.2014)
@@ -26,7 +26,7 @@ byte mac[] = { 0x,0x,0x,0x,0x,0x }; //MAC-адрес Arduino
 #define BMP085_EXIST 1          // наличие датчика атмосферного давления
 #define DHT_EXIST 1             // наличие датчика влажности
 #define DHT2_EXIST 0            // наличие второго датчика влажности
-#define LIGHTMETER_EXIST 0      // наличие датчика освещённости
+#define LIGHTMETER_EXIST 1      // наличие датчика освещённости
 #define DS18B20_PIN 2           // пин подключения термодатчика DS18B20
 #define DHTPIN 6                // пин подключения датчика влажности DHT22
 #define DHT2PIN 7               // пин подключения второго датчика влажности DHT22
@@ -69,7 +69,7 @@ int CountSensors;                               // количество найд
 
 
 void setup(void) {
-  wdt_disable();
+//  wdt_disable();
 
   Serial.begin(9600);
 
@@ -87,6 +87,11 @@ void setup(void) {
 	   Serial.println("Could not find a valid BMP085 sensor, check wiring!");
   }
   #endif
+
+  #if LIGHTMETER_EXIST == 1
+    lightMeter.begin();
+  #endif
+
 
   //Initialize Ethernet
   initialize_ethernet();
@@ -176,7 +181,7 @@ void loop(void) {
     Serial.println("Ready...");
    }
 
-delay(1500); //  5 minuts
+delay(1500);
 
 }
 
@@ -370,8 +375,8 @@ void meteodata()
     #if LIGHTMETER_EXIST == 1
       // get Lux Temperature
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "23=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "L1=");
       int lux=lightMeter.readLightLevel();
       itoa(lux, temp);
       strcat(replyBuffer, temp);
@@ -385,8 +390,8 @@ void meteodata()
     #if BMP085_EXIST == 1
       // get BMP085 pressure
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "771=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "P1=");
       Pressure=bmp.readPressure();
       p_100 = Pressure/1.333;
   Whole = p_100 / 100;
@@ -405,8 +410,8 @@ void meteodata()
 
       // get BMP085 temperature
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "772=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "T1=");
       Temperature = bmp.readTemperature();
       ftoc(Temperature*100);
 
@@ -427,14 +432,14 @@ void meteodata()
 
       // get DHT22 Humidity
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "011=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "H11=");
       ftoc(Humidity*100);
 
       // get DHT22 Temperature
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "012=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "T11=");
       ftoc(Temperature*100);
 
       if (Debug)
@@ -452,14 +457,14 @@ void meteodata()
 
       // get DHT22 Humidity
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "021=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "H21=");
       ftoc(Humidity*100);
 
       // get DHT22 Temperature
       strcat(replyBuffer, "&");
-      strcat(replyBuffer, macbuf);
-      strcat(replyBuffer, "022=");
+//      strcat(replyBuffer, macbuf);
+      strcat(replyBuffer, "T21=");
       ftoc(Temperature*100);
       if (Debug)
       {
