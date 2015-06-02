@@ -15,3 +15,6 @@ By Vitaly Korobov
 * DHT022 http://playground.arduino.cc//Main/DHTLib
 * BH1750 https://github.com/claws/BH1750
 * OneWire http://playground.arduino.cc/Learning/OneWire
+
+## Known bugs
+* Unstable on Adruino Pro. Not enought memory for all sensor 
