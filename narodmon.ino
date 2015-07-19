@@ -1,7 +1,7 @@
  /*
 Скетч для Arduino/ENC28J60 для отправки метеоданных на Народный мониторинг
 Автор: Виталий Коробов
-Версия: 0.2 (2015.05.26)
+Версия: 0.21 (2015.05.26)
 
 Основано на:
 Версия 2.0 (19.07.2014)
@@ -17,15 +17,15 @@ http://student-proger.ru/2014/07/meteostanciya-2-0/
 #include <Adafruit_BMP085.h>
 #include <BH1750.h>
 #include <EtherCard.h> // https://github.com/jcw/ethercard
-#include <avr/wdt.h> // Watchdog timer
+//#include <avr/wdt.h> // Watchdog timer
 
 bool Debug = true; //режим отладки
 
 //********************************************************************************************
-byte mac[] = { 0x,0x,0x,0x,0x,0x }; //MAC-адрес Arduino
+byte mac[] = { 0x0,0x0,0x0,0x0,0x0,0x0 }; //MAC-адрес Arduino
 #define BMP085_EXIST 1          // наличие датчика атмосферного давления
 #define DHT_EXIST 1             // наличие датчика влажности
-#define DHT2_EXIST 0            // наличие второго датчика влажности
+#define DHT2_EXIST 1            // наличие второго датчика влажности
 #define LIGHTMETER_EXIST 1      // наличие датчика освещённости
 #define DS18B20_PIN 2           // пин подключения термодатчика DS18B20
 #define DHTPIN 6                // пин подключения датчика влажности DHT22
@@ -72,6 +72,11 @@ void setup(void) {
 //  wdt_disable();
 
   Serial.begin(9600);
+
+  if (Debug)
+  {
+    Serial.println("[Arduino&ENC28J60 for Narodmon. V.0.2]");
+  }
 
  //Узнаём количество термодатчиков
   CountSensors = DsCount();
@@ -136,7 +141,7 @@ void loop(void) {
   }
 
   res = res + 1;
-  wdt_reset();
+  //wdt_reset();
 
   ether.packetLoop(ether.packetReceive());
 
@@ -377,8 +382,8 @@ void meteodata()
       strcat(replyBuffer, "&");
 //      strcat(replyBuffer, macbuf);
       strcat(replyBuffer, "L1=");
-      int lux=lightMeter.readLightLevel();
-      itoa(lux, temp);
+      uint16_t lux=lightMeter.readLightLevel();
+      uitoa(lux, temp);
       strcat(replyBuffer, temp);
     if (Debug)
     {
@@ -528,6 +533,18 @@ void itoa(int n, char s[])
   } while ((n /= 10) > 0);  /* удаляем */
   if (sign < 0)
     s[i++] = '-';
+  s[i] = '\0';
+  reverse(s);
+}
+
+void uitoa(uint16_t n, char s[])
+{
+  int i;
+
+  i = 0;
+  do {                      /* генерируем цифры в обратном порядке */
+    s[i++] = n % 10 + '0';  /* берем следующую цифру */
+  } while ((n /= 10) > 0);  /* удаляем */
   s[i] = '\0';
   reverse(s);
 }
